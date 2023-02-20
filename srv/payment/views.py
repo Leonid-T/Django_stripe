@@ -2,38 +2,52 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.views import View, generic
 from django.urls import reverse
-from django.contrib.sites.shortcuts import get_current_site
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 
 import stripe
 
-from .models import Item
+from .models import Item, Order
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
-class CreateCheckoutSessionView(View):
+class CreateCheckoutSessionItemView(View):
     def get(self, request, pk):
         item = get_object_or_404(Item, pk=pk)
+
         domain = request.build_absolute_uri('/')[:-1]
         session = stripe.checkout.Session.create(
             line_items=[{
-                'price_data': {
-                    'currency': 'usd',
-                    'unit_amount': item.price,
-                    'product_data': {
-                        'name': item.name,
-                        'description': item.description,
-                    },
-                },
+                'price_data': item.get_price_data(),
                 'quantity': 1,
             }],
             mode='payment',
             success_url=domain + reverse('payment:success'),
             cancel_url=domain + reverse('payment:cancel'),
         )
-        return JsonResponse({'session_id': session.id}, status=200)
+        return JsonResponse({
+            'session_id': session.id,
+            'public_key': settings.STRIPE_PUBLIC_KEY,
+        }, status=200)
+
+
+class CreateCheckoutSessionOrderView(View):
+    def get(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
+
+        domain = request.build_absolute_uri('/')[:-1]
+        session = stripe.checkout.Session.create(
+            line_items=order.get_line_items(),
+            mode='payment',
+            allow_promotion_codes=True,
+            success_url=domain + reverse('payment:success'),
+            cancel_url=domain + reverse('payment:cancel'),
+        )
+        return JsonResponse({
+            'session_id': session.id,
+            'public_key': settings.STRIPE_PUBLIC_KEY,
+        }, status=200)
 
 
 class SuccessView(generic.TemplateView):
@@ -46,8 +60,9 @@ class CancelView(generic.TemplateView):
 
 class ItemDetailView(generic.DetailView):
     model = Item
-    template_name = 'detail.html'
+    template_name = 'item.html'
 
-    def get_queryset(self):
-        pk = self.kwargs.get('pk')
-        return Item.objects.filter(pk=pk)
+
+class OrderDetailView(generic.DetailView):
+    model = Order
+    template_name = 'order.html'
