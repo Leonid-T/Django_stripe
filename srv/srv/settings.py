@@ -129,5 +129,5 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-STRIPE_PUBLIC_KEY = 'pk_test_TYooMQauvdEDq54NiTphI7jx'
-STRIPE_SECRET_KEY = 'sk_test_4eC39HqLyjWDarjtT1zdp7dc'
+STRIPE_PUBLIC_KEY = environ.get('STRIPE_PUBLIC_KEY', 'pk_test_TYooMQauvdEDq54NiTphI7jx')
+STRIPE_SECRET_KEY = environ.get('STRIPE_SECRET_KEY', 'sk_test_4eC39HqLyjWDarjtT1zdp7dc')

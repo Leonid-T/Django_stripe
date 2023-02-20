@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+import stripe
 
 
 class Item(models.Model):
@@ -22,17 +25,31 @@ class Item(models.Model):
         return price_data
 
 
+class Discount(models.Model):
+    percent_off = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    def __str__(self):
+        return str(self.percent_off)
+
+
 class Order(models.Model):
-    customer = models.ForeignKey(User, related_name='order', on_delete=models.CASCADE, null=True)
+    customer = models.ForeignKey(User, related_name='order', on_delete=models.CASCADE, blank=True, null=True)
+    discount = models.ForeignKey(Discount, on_delete=models.SET_NULL, blank=True, null=True)
 
     def __str__(self):
         return f'Order of {self.customer}'
 
     def total_price(self):
-        return sum(item.total_price() for item in self.items.all())
+        coupon = self.discount.percent_off/100 if self.discount else 1
+        return sum(item.total_price() for item in self.items.all()) * coupon
 
     def get_line_items(self):
         return [item.get_buy_data() for item in self.items.all()]
+
+    def get_discounts(self):
+        if self.discount:
+            return [{'coupon': stripe.Coupon.create(percent_off=self.discount.percent_off)}]
+        return []
 
 
 class OrderItem(models.Model):
@@ -49,4 +66,3 @@ class OrderItem(models.Model):
             'quantity': self.quantity,
         }
         return buy_data
-

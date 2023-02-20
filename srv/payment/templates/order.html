@@ -11,6 +11,9 @@
     <p>Price: {{ order_item.item.price }} x {{ order_item.quantity }} = {{ order_item.total_price }}</p>
     <br>
     {% endfor %}
+    {% if order.discount %}
+    <h2>Discount: {{ order.discount.percent_off }}%</h2>
+    {% endif %}
     <h1>Total: {{ order.total_price }}</h1>
     <button id="buy-button">Buy</button>
     <script src="https://js.stripe.com/v3/"></script>

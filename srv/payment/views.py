@@ -39,8 +39,8 @@ class CreateCheckoutSessionOrderView(View):
         domain = request.build_absolute_uri('/')[:-1]
         session = stripe.checkout.Session.create(
             line_items=order.get_line_items(),
+            discounts=order.get_discounts(),
             mode='payment',
-            allow_promotion_codes=True,
             success_url=domain + reverse('payment:success'),
             cancel_url=domain + reverse('payment:cancel'),
         )
