@@ -24,6 +24,9 @@ class Item(models.Model):
         return self.name
 
     def get_price_data(self):
+        """
+        Price data for line_items in stripe.checkout.Session
+        """
         price_data = {
             'currency': self.currency.type,
             'unit_amount': self.price,
@@ -50,6 +53,9 @@ class Order(models.Model):
         return f'Order of {self.customer}'
 
     def clean(self):
+        """
+        Validation of equal item's currency in order
+        """
         items = self.items.all()
         def_currency = items[0].item.currency
         for order_item in items[1:]:
@@ -57,13 +63,22 @@ class Order(models.Model):
                 raise ValidationError('Currency of items should not be different')
 
     def total_price(self):
+        """
+        Total price with discount
+        """
         coupon = self.discount.percent_off/100 if self.discount else 1
         return sum(item.total_price() for item in self.items.all()) * coupon
 
     def get_line_items(self):
+        """
+        Create line_items for stripe.checkout.Session
+        """
         return [item.get_buy_data() for item in self.items.all()]
 
     def get_discounts(self):
+        """
+        Create discounts for stripe.checkout.Session
+        """
         if self.discount:
             return [{'coupon': stripe.Coupon.create(percent_off=self.discount.percent_off)}]
         return []
@@ -75,9 +90,15 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
 
     def total_price(self):
+        """
+        Total price of one item of goods
+        """
         return self.item.price * self.quantity
 
     def get_buy_data(self):
+        """
+        Create item for line_items in stripe.checkout.Session
+        """
         buy_data = {
             'price_data': self.item.get_price_data(),
             'quantity': self.quantity,
