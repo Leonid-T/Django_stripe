@@ -64,7 +64,7 @@ class Order(models.Model):
         """
         Total price with discount
         """
-        coupon = self.discount.percent_off/100 if self.discount else 1
+        coupon = self.discount.percent_off/100 if self.discount else 0
         return round(sum(item.total_price() for item in self.items.all()) * (1 - coupon), 2)
 
     def get_line_items(self):
