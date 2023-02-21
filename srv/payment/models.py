@@ -65,7 +65,7 @@ class Order(models.Model):
         Total price with discount
         """
         coupon = self.discount.percent_off/100 if self.discount else 1
-        return sum(item.total_price() for item in self.items.all()) * coupon
+        return round(sum(item.total_price() for item in self.items.all()) * (1 - coupon), 2)
 
     def get_line_items(self):
         """
@@ -98,7 +98,7 @@ class OrderItem(models.Model):
         """
         Total price of one item of goods
         """
-        return self.item.price * self.quantity
+        return round(self.item.price * self.quantity, 2)
 
     def get_buy_data(self):
         """
