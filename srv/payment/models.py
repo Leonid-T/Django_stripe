@@ -1,21 +1,31 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 
 import stripe
+
+
+class Currency(models.Model):
+    type = models.CharField(max_length=4)
+    char = models.CharField(max_length=1, null=True)
+
+    def __str__(self):
+        return self.type
 
 
 class Item(models.Model):
     name = models.CharField(max_length=128)
     description = models.CharField(max_length=512)
     price = models.PositiveIntegerField()
+    currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return self.name
 
     def get_price_data(self):
         price_data = {
-            'currency': 'usd',
+            'currency': self.currency.type,
             'unit_amount': self.price,
             'product_data': {
                 'name': self.name,
@@ -29,7 +39,7 @@ class Discount(models.Model):
     percent_off = models.FloatField(validators=[MinValueValidator(0), MaxValueValidator(100)])
 
     def __str__(self):
-        return str(self.percent_off)
+        return f'{self.percent_off} %'
 
 
 class Order(models.Model):
@@ -38,6 +48,13 @@ class Order(models.Model):
 
     def __str__(self):
         return f'Order of {self.customer}'
+
+    def clean(self):
+        items = self.items.all()
+        def_currency = items[0].item.currency
+        for order_item in items[1:]:
+            if order_item.item.currency != def_currency:
+                raise ValidationError('Currency of items should not be different')
 
     def total_price(self):
         coupon = self.discount.percent_off/100 if self.discount else 1

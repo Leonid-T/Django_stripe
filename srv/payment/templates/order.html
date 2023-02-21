@@ -8,13 +8,16 @@
     {% for order_item in order.items.all %}
     <h2>{{ order_item.item.name }}</h2>
     <p>Description: {{ order_item.item.description }}</p>
-    <p>Price: {{ order_item.item.price }} x {{ order_item.quantity }} = {{ order_item.total_price }}</p>
+    <p>Price: {{ order_item.quantity }} x {{ order_item.item.price }} {{ order_item.item.currency.char }} = {{ order_item.total_price }} {{ order_item.item.currency.char }}</p>
     <br>
     {% endfor %}
     {% if order.discount %}
     <h2>Discount: {{ order.discount.percent_off }}%</h2>
     {% endif %}
-    <h1>Total: {{ order.total_price }}</h1>
+    <h1>Total: {{ order.total_price }} {{ order.items.first.item.currency.char }}</h1>
+    {% if request.GET.paid %}
+    <h1>Successfully paid</h1>
+    {% endif %}
     <button id="buy-button">Buy</button>
     <script src="https://js.stripe.com/v3/"></script>
     <script type="text/javascript">

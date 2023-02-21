@@ -23,8 +23,8 @@ class CreateCheckoutSessionItemView(View):
                 'quantity': 1,
             }],
             mode='payment',
-            success_url=domain + reverse('payment:success'),
-            cancel_url=domain + reverse('payment:cancel'),
+            success_url=domain + reverse('payment:item', args=(pk,)) + '?paid=1',
+            cancel_url=domain + reverse('payment:item', args=(pk,)),
         )
         return JsonResponse({
             'session_id': session.id,
@@ -41,21 +41,13 @@ class CreateCheckoutSessionOrderView(View):
             line_items=order.get_line_items(),
             discounts=order.get_discounts(),
             mode='payment',
-            success_url=domain + reverse('payment:success'),
-            cancel_url=domain + reverse('payment:cancel'),
+            success_url=domain + reverse('payment:order', args=(pk,)) + '?paid=1',
+            cancel_url=domain + reverse('payment:order', args=(pk,)),
         )
         return JsonResponse({
             'session_id': session.id,
             'public_key': settings.STRIPE_PUBLIC_KEY,
         }, status=200)
-
-
-class SuccessView(generic.TemplateView):
-    template_name = 'success.html'
-
-
-class CancelView(generic.TemplateView):
-    template_name = 'cancel.html'
 
 
 class ItemDetailView(generic.DetailView):

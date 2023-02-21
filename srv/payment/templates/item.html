@@ -6,8 +6,11 @@
   <body>
     <h2>{{ item.name }}</h2>
     <p>Description: {{ item.description }}</p>
-    <p>Price: {{ item.price }}</p>
+    <p>Price: {{ item.price }} {{ item.currency.char }}</p>
     <button id="buy-button">Buy</button>
+    {% if request.GET.paid %}
+    <h1>Successfully paid</h1>
+    {% endif %}
     <script src="https://js.stripe.com/v3/"></script>
     <script type="text/javascript">
       let buyButton = document.getElementById('buy-button');
