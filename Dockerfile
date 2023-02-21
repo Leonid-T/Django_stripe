@@ -11,5 +11,3 @@ COPY ./srv ./srv
 
 WORKDIR ./srv
 ENTRYPOINT ["/usr/src/app/srv/entrypoint.sh"]
-
-CMD gunicorn srv.wsgi:application --bind 0.0.0.0:8000

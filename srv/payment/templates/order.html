@@ -14,7 +14,7 @@
     {% if order.discount %}
     <h2>Discount: {{ order.discount.percent_off }}%</h2>
     {% endif %}
-    <h1>Total: {{ order.total_price }} {{ order.items.first.item.currency.char }}</h1>
+    <h1>Total: {{ order.total_price }} {{ order.currency.char }}</h1>
     {% if request.GET.paid %}
     <h1>Successfully paid</h1>
     {% endif %}

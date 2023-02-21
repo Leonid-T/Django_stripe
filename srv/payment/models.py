@@ -55,19 +55,10 @@ class Discount(models.Model):
 class Order(models.Model):
     customer = models.ForeignKey(User, related_name='order', on_delete=models.CASCADE, blank=True, null=True)
     discount = models.ForeignKey(Discount, on_delete=models.SET_NULL, blank=True, null=True)
+    currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return f'Order of {self.customer}'
-
-    def clean(self):
-        """
-        Validation of equal item's currency in order
-        """
-        items = self.items.all()
-        def_currency = items[0].item.currency
-        for order_item in items[1:]:
-            if order_item.item.currency != def_currency:
-                raise ValidationError('Currency of items should not be different')
 
     def total_price(self):
         """
@@ -95,6 +86,13 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     item = models.ForeignKey(Item, related_name='order_items', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
+
+    def clean(self):
+        """
+        Validation of equal item's currency in order
+        """
+        if self.item.currency != self.order.currency:
+            raise ValidationError('Currency of items should not be different')
 
     def total_price(self):
         """
