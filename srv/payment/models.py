@@ -17,8 +17,15 @@ class Currency(models.Model):
 class Item(models.Model):
     name = models.CharField(max_length=128)
     description = models.CharField(max_length=512)
-    price = models.PositiveIntegerField()
+    price = models.FloatField(validators=[MinValueValidator(0.5)])
     currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True)
+
+    @property
+    def get_price(self):
+        """
+        Getting price for stripe data
+        """
+        return int(self.price*100)
 
     def __str__(self):
         return self.name
@@ -29,7 +36,7 @@ class Item(models.Model):
         """
         price_data = {
             'currency': self.currency.type,
-            'unit_amount': self.price,
+            'unit_amount': self.get_price,
             'product_data': {
                 'name': self.name,
                 'description': self.description,
